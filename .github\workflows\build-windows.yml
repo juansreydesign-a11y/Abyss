@@ -1,0 +1,33 @@
+name: Build Windows VST3
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    tags: [ "v*" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Configure
+        run: cmake -S . -B build -A x64
+      - name: Build VST3 and Standalone
+        run: cmake --build build --config Release --parallel
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $vst = Get-ChildItem -Path build -Directory -Filter "*.vst3" -Recurse | Select-Object -First 1
+          if ($null -eq $vst) { throw "VST3 bundle not found" }
+          Copy-Item $vst.FullName dist/ -Recurse
+          Compress-Archive -Path dist/* -DestinationPath AbyssVocal-Windows-VST3.zip -Force
+      - name: Upload plugin artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AbyssVocal-Windows-VST3
+          path: AbyssVocal-Windows-VST3.zip
+          if-no-files-found: error
