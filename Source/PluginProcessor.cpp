@@ -43,8 +43,8 @@ void AbyssVocalAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     phaseL = 0.0f; phaseR = 1.7f;
     for (auto& channel : phaserState) for (float& state : channel) state = 0.0f;
     juce::dsp::ProcessSpec spec { sr, (juce::uint32)samplesPerBlock, (juce::uint32)getTotalNumOutputChannels() };
+    reverb.prepare(spec);
     reverb.reset();
-    reverb.setSampleRate(sr);
     toneCoeffs = juce::dsp::IIR::Coefficients<float>::makeLowPass(sr, 18000.0);
     toneL.coefficients = toneCoeffs;
     toneR.coefficients = toneCoeffs;
@@ -141,13 +141,10 @@ void AbyssVocalAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         writePos = (writePos + 1) % delayBuffer.getNumSamples();
     }
 
-    if (channels == 1)
     {
-        reverb.processMono(buffer.getWritePointer(0), n);
-    }
-    else
-    {
-        reverb.processStereo(buffer.getWritePointer(0), buffer.getWritePointer(1), n);
+        juce::dsp::AudioBlock<float> audioBlock(buffer);
+        juce::dsp::ProcessContextReplacing<float> context(audioBlock);
+        reverb.process(context);
     }
 
     for (int ch = 0; ch < channels; ++ch)

@@ -39,3 +39,8 @@ The macro uses a front-loaded power curve (`amount ^ 0.48`) so the first part of
 - The DSP is a lightweight first pass. Before commercial use, add oversampling/anti-aliasing for saturation, proper stereo-linked modulation, parameter smoothing, latency/tail validation, preset management, accessibility and extensive DAW testing.
 - The installer script is a template and may need its source path adjusted to the exact JUCE build output.
 - JUCE is fetched from its official GitHub repository at configure time. Review JUCE's current licensing terms for your distribution model.
+
+
+### Compatibility fix (JUCE 8)
+
+The reverb is initialized with `juce::dsp::Reverb::prepare()` and processed using `juce::dsp::ProcessContextReplacing`, matching the JUCE 8 DSP API.
